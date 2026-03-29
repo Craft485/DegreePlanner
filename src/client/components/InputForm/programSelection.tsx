@@ -1,10 +1,10 @@
-import { Button, Form, Select } from "antd";
+import { Form, Select } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 import "./programSelection.css"
 import { CircleX } from "lucide-react";
 
 export interface ProgramSelectionProps {
-  onRemove: (key: string) => void;
+  onRemove: (_key: string) => void;
   listId: string;
   locations?: string[];
   colleges?: string[];
