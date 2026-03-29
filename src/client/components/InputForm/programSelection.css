@@ -1,0 +1,15 @@
+.program-selection {
+  margin-bottom: 1.5rem;
+}
+
+.program-selection:hover {
+  background-color: rgba(62, 71, 83, 0.5);
+}
+
+.program-selection:hover .remove-selection-btn {
+  display: block !important;
+}
+
+.remove-selection-btn {
+  display: none !important;
+}
