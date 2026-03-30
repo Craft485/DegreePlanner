@@ -1,0 +1,21 @@
+{
+  "name": "degree-planner",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --no-warnings --loader ts-node/esm -r dotenv/config src/server.ts dotenv_config_path=../../.env"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "eslint": "9",
+    "ts-node": "^10.9.2",
+    "typescript": "5"
+  }
+}
