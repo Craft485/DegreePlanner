@@ -35,12 +35,12 @@ export function ProgramSelection(props: Readonly<ProgramSelectionProps>) {
       </Form.Item>
       <Form.Item name={`program${props.listId}`} label="Program" initialValue={emptyOption.label}>
         <Select
-          options={[emptyOption, ...createSelectOptions(props.colleges ?? [])]}
+          options={[emptyOption, ...createSelectOptions(props.programs ?? [])]}
         />
       </Form.Item>
       <Form.Item name={`field${props.listId}`} label="Field" initialValue={emptyOption.label}>
         <Select
-          options={[emptyOption, ...createSelectOptions(props.colleges ?? [])]}
+          options={[emptyOption, ...createSelectOptions(props.fieldsOfStudy ?? [])]}
         />
       </Form.Item>
       <CircleX color="red" onClick={() => props.onRemove(props.listId)} style={{ cursor: "pointer" }} />

@@ -1,8 +1,9 @@
 import { Button, Card, Form } from "antd"
 import { ProgramSelection, ProgramSelectionProps } from "./programSelection"
 import { Plus } from "lucide-react"
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import "./inputForm.css"
+import { usePrograms } from "@/hooks/programs"
 
 function Title({ onAdd }: Readonly<{ onAdd: () => void }>) {
   return (
@@ -14,6 +15,16 @@ function Title({ onAdd }: Readonly<{ onAdd: () => void }>) {
 
 export function InputForm() {
   const [selections, setSelections] = useState<Omit<ProgramSelectionProps, "onRemove">[]>([])
+  const { data, loading, error } = usePrograms()
+
+  const { colleges, fieldsOfStudy, locations, programs } = useMemo(() => (
+    {
+      programs: Array.from(new Set(data.map(p => p.level).filter(Boolean))),
+      locations: Array.from(new Set(data.map(p => p.LocationCode ?? "").filter(Boolean))),
+      fieldsOfStudy: Array.from(new Set(data.map(p => p.ProgramTitle ?? "").filter(Boolean))),
+      colleges: Array.from(new Set(data.map(p => p.CollegeCode ?? "").filter(Boolean))),
+    } satisfies Pick<ProgramSelectionProps, "colleges" | "fieldsOfStudy" | "locations" | "programs">
+  ), [data])
 
   const removeSelection = useCallback((key: string) => {
     setSelections(prev => prev.filter(selection => selection.listId !== key))
@@ -22,18 +33,25 @@ export function InputForm() {
   const addSelection = useCallback(() => {
     setSelections(prev => prev.concat([{
       listId: String(new Date().getTime()),
-      // TODO: Add data for selections
+      fieldsOfStudy,
+      locations,
+      colleges,
+      programs,
     }]))
-  }, [])
+  }, [colleges, fieldsOfStudy, locations, programs])
 
   return (
     <Form className="ml-2 mr-2">
       <Card title={<Title onAdd={addSelection}/>}>
-        {selections.map(props => (
+        {(!loading && !error) && selections.map(props => (
           <ProgramSelection
             key={props.listId}
             listId={props.listId}
             onRemove={removeSelection}
+            colleges={props.colleges}
+            fieldsOfStudy={props.fieldsOfStudy}
+            locations={props.locations}
+            programs={props.programs}
           />
         ))}
       </Card>
