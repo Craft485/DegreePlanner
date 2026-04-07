@@ -40,8 +40,19 @@ export function InputForm() {
     }]))
   }, [colleges, fieldsOfStudy, locations, programs])
 
+  const formFinish = useCallback(async (values) => {
+    console.log(values)
+    await fetch("http://127.0.0.1:3001/plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stacks: ["a", "b"],
+      }),
+    })
+  }, [])
+
   return (
-    <Form className="ml-2 mr-2">
+    <Form className="ml-2 mr-2" onFinish={formFinish}>
       <Card title={<Title onAdd={addSelection}/>}>
         {(!loading && !error) && selections.map(props => (
           <ProgramSelection
@@ -55,6 +66,7 @@ export function InputForm() {
           />
         ))}
       </Card>
+      <Button htmlType="submit">Submit</Button>
     </Form>
   )
 }

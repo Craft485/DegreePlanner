@@ -1,5 +1,6 @@
 import { Router } from "express"
-
+import { ParseAnalytics as Parser } from "../../../solver/index.js"
+console.log(Parser)
 const router = Router()
 
 router.get("/programs", async (req, res) => {
@@ -17,7 +18,16 @@ router.get("/programs", async (req, res) => {
     // TODO: dynamically determine level (could this be done client side?)
     level: "Bachelor's of Science"
   }))
-  res.setHeader("Access-Control-Allow-Origin", "*").send(result)
+  res.send(result)
+})
+
+router.post("/plan", async (req, res) => {
+  const uniqueStacks = (req.body?.stacks as string[] | undefined)?.filter((v, i, a) => a.indexOf(v) === i)
+  if (!uniqueStacks) {
+    res.sendStatus(400)
+  }
+  const result = await Parser(uniqueStacks as string[])
+  res.send(result)
 })
 
 export default router
