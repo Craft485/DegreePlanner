@@ -2,10 +2,14 @@ import express from "express";
 import type { Express } from "express";
 import logger from "./utils/logger.js";
 import router from "./routes/routes.js";
+import cors from "cors"
 
 const app: Express = express()
 
 //Setup middleware
+app.use(cors())
+app.use(express.json())
+
 app.use((req, res, next) => {
   const { method, url, ip } = req
   next();

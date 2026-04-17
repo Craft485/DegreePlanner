@@ -1,5 +1,6 @@
 import { Router } from "express"
-
+import { ParseAnalytics as Parser } from "../../../solver/index.js"
+console.log(Parser)
 const router = Router()
 
 router.get("/programs", async (req, res) => {
@@ -17,7 +18,24 @@ router.get("/programs", async (req, res) => {
     // TODO: dynamically determine level (could this be done client side?)
     level: "Bachelor's of Science"
   }))
-  res.setHeader("Access-Control-Allow-Origin", "*").send(result)
+  res.send(result)
+})
+
+interface FormSubmissionDate {
+  items: {
+    college?: string;
+    field: string;
+    location?: string;
+    program?: string;
+  }[]
+}
+
+router.post("/plan", async (req, res) => {
+  const data: FormSubmissionDate = req.body?.data
+  const stacks = data.items.map(item => item.field)
+  console.log(stacks)
+  const result = await Parser(stacks)
+  res.send(result)
 })
 
 export default router

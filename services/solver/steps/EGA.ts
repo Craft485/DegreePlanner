@@ -1,0 +1,140 @@
+/**
+ * This module holds functions that relate to using a genetic algorithm in order to better optimize the baseline degree plans
+ */
+
+import { Curriculum } from 'types/solver.js'
+import { DeepCopy, ShiftBranch, GetPreReqs, UpdateMovedCourses } from '../utils/index.js'
+import * as radashi from "radashi"
+
+const MAX_GENERATION_COUNT = 15, CHILDREN_PER_PARENT_PER_GENERATION = 10
+
+export async function Optimize(curriculums: (Curriculum | null)[], currentGeneration: number = 1, hashedCurriculums: Set<string> = new Set): Promise<Curriculum> {
+	if (currentGeneration > MAX_GENERATION_COUNT) {
+		return SelectBestCurriculumFromList(curriculums as Curriculum[])
+	}
+	console.log(`[E/GA]: Starting generation ${currentGeneration} / ${MAX_GENERATION_COUNT}`)
+	const nextGeneration = []
+	for (let c = 0; c < curriculums.length; c++) {
+		const curriculum = curriculums[c]
+		const courses = (curriculum as Curriculum).semesters.flat()
+		const movedCourses: string[] = courses.filter(c => (c.semesterLock?.length ?? -1) > 0 || c.semester === 1).map(c => c.courseCode)
+		let singleCopyAllowedThrough = false
+		for (let _ = 0; _ < CHILDREN_PER_PARENT_PER_GENERATION; _++) {
+			let child: Curriculum | null = await Mutate(curriculum as Curriculum, movedCourses)
+			if (radashi.isEqual(child, curriculum)) {
+				if (singleCopyAllowedThrough) {
+					child = null
+					if (movedCourses.length === courses.length) {
+						console.log(`[E/GA] Exhausted list of courses, skipping anymore children for ${c + 1}.${_ + 1}`)
+						break
+					}
+					continue
+				}
+				nextGeneration.push(child) // We have to add it here since the normal check for duplicates will prevent it from being added
+				singleCopyAllowedThrough = true
+			}
+			const hashedChild = JSON.stringify(child)
+			if (!hashedCurriculums.has(hashedChild)) {
+				nextGeneration.push(child)
+				hashedCurriculums.add(hashedChild)
+			}
+		}
+		curriculums[c] = null
+	}
+	console.log(`[E/GA]: Found ${nextGeneration.length} viable mutations`)
+	if (nextGeneration.length === curriculums.length) {
+		console.log('No new mutations made, stopping EGA...')
+		return SelectBestCurriculumFromList(nextGeneration)
+	}
+	return await Optimize(nextGeneration, currentGeneration + 1, hashedCurriculums)
+}
+
+/**
+ * Take a single step in optimization
+ */
+async function Mutate(curriculum: Curriculum, alreadyAttemptedMoves: string[]): Promise<Curriculum> {
+	let tempCurriculum = DeepCopy<Curriculum>(curriculum)
+	let courses = tempCurriculum.semesters.flat()
+	while (alreadyAttemptedMoves.length < courses.length) {
+		const availableCourses = courses.filter(x => !(alreadyAttemptedMoves.includes(x.courseCode)))
+		let maxWeightedScoreIndex = 0
+		let maxWeightedScore = availableCourses[0].semester * availableCourses[0].metrics!.structuralComplexity
+		for (let courseIndex = 1; courseIndex < availableCourses.length; courseIndex++) {
+			const currScore = availableCourses[courseIndex].semester * availableCourses[courseIndex].metrics!.structuralComplexity
+			if (maxWeightedScore < currScore) {
+				maxWeightedScore = currScore
+				maxWeightedScoreIndex = courseIndex
+			} else if (maxWeightedScore === currScore && +/(\d+)/.exec(availableCourses[courseIndex].courseCode)![0] < +/(\d+)/.exec(availableCourses[maxWeightedScoreIndex].courseCode)![0]) { // Favor courses with lower course numbers
+				maxWeightedScoreIndex = courseIndex
+			}
+		}
+		let courseToMove = availableCourses[maxWeightedScoreIndex]
+		alreadyAttemptedMoves.push(courseToMove.courseCode)
+		if (courseToMove.semesterLock?.length) continue
+		// console.log(`[Mutation]: Trying to move ${courseToMove.courseCode}`)
+		const minSemesterIndex = (await GetPreReqs(tempCurriculum.semesters.flat(), courseToMove)).filter((v, i, a) => a.findIndex(v2 => v2.semester === v.semester) === i).length
+		if (minSemesterIndex + 1 < courseToMove.semester) { // We can try to move the course to earlier in the plan
+			const potentialSemesterIndices = new Array(courseToMove.semester - (minSemesterIndex + 1)).fill(0).map((_, i) => minSemesterIndex + i)
+			// console.log(`Potenial semester indicies: ${potentialSemesters.join(', ')}`)
+			for (let s = 0; s < potentialSemesterIndices.length; s++) {
+				const firstLayerPreReqs = courses.filter(v => courseToMove.preReqs.includes(v.courseCode))
+				courseToMove.semester = potentialSemesterIndices[s] + 1
+				for (const prereq of firstLayerPreReqs) {
+					ShiftBranch(prereq, courseToMove, tempCurriculum.semesters, false)
+				}
+				// @ts-ignore check back on this one
+				const creditHoursAfterShift = Object.values<number>(courses.reduce((acc, course) => { acc[course.semester] = ((acc[course.semester]) || 0) + course.credits; return acc }, {}))
+				// Check for fail signal from shiftbranch and for credit hour violation
+				if (Math.min(...courses.map(x => x.semester)) < 1 || creditHoursAfterShift.find(hours => hours > 18) !== undefined) {
+					// console.log(`[Mutation]: Couldn't move ${courseToMove.courseCode} to semester ${minSemesterIndex + 1}, retrying...`)
+					tempCurriculum = DeepCopy<Curriculum>(curriculum) // Reset temp
+					courses = tempCurriculum.semesters.flat()
+					courseToMove = courses.find(x => x.courseCode === courseToMove.courseCode)!
+					continue
+				}
+				// console.log(`[Mutation]: Moved ${courseToMove.courseCode}`)
+				await UpdateMovedCourses(tempCurriculum.semesters)
+				return tempCurriculum
+			}
+		}
+		// console.log(`[Mutation]: Couldn't move ${courseToMove.courseCode}, retrying...`)
+	}
+	return curriculum
+}
+
+/**
+ * 
+ * @param curriculum Full curriculum object
+ * @returns Returns a number that represents both of the parameters of the CBCB model as a squared distance to the origin
+ */
+const Score = (curriculum: Curriculum): number => {
+	const sumOfWeightedComplexitySquared = curriculum.semesters.flat().reduce((total, currCourse) => total + (currCourse.semester * currCourse.metrics!.structuralComplexity), 0) ** 2
+	const maxCreditsSquared = Math.max(...new Array(curriculum.semesters.length).fill(0).map((_, i) => curriculum.semesters[i].reduce((total, curr) => total + curr.credits, 0))) ** 2
+	console.log(`sum of weighted complexity squared: ${sumOfWeightedComplexitySquared}, max number of credits in a specific semester squared: ${maxCreditsSquared}, score: ${sumOfWeightedComplexitySquared + maxCreditsSquared}`)
+	return sumOfWeightedComplexitySquared + maxCreditsSquared
+}
+
+function SelectBestCurriculumFromList(curriculums: Curriculum[]): Curriculum {
+	let bestScore = Score(curriculums[0]), bestScoreIndex = 0
+	for (let j = 1; j < curriculums.length; j++) {
+		const currScore = Score(curriculums[j])
+		if (bestScore > currScore) {
+			bestScore = currScore
+			bestScoreIndex = j
+		}
+	}
+	console.log(`Found a best score of ${bestScore} out of ${curriculums.length} curriculums`)
+	return curriculums[bestScoreIndex]
+}
+
+import { readFile } from 'fs/promises'
+if (process.argv.find(s => s.includes('EGA'))) {
+	readFile('out/server/buffer.json', { encoding: 'utf-8' })
+	.then(async v => {
+		const data = JSON.parse(v)
+		Optimize([data])
+		.then(async r => {
+			console.log('done')
+		})
+	})
+}

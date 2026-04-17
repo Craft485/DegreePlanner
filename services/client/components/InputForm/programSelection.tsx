@@ -3,47 +3,46 @@ import type { DefaultOptionType } from "antd/es/select";
 import "./programSelection.css"
 import { CircleX } from "lucide-react";
 
+const { Item } = Form
+
 export interface ProgramSelectionProps {
-  onRemove: (_key: string) => void;
-  listId: string;
-  locations?: string[];
-  colleges?: string[];
-  programs?: string[];
-  fieldsOfStudy?: string[];
+  locations: string[];
+  colleges: string[];
+  programs: string[];
+  fieldsOfStudy: string[];
+  stacks: { stack: string, title: string }[];
+  onRemove: () => void;
+  name: number;
 }
 
-function createSelectOptions(values: string[]): DefaultOptionType[] {
+export function createSelectOptions(values: string[]): DefaultOptionType[] {
   return values.map(value => ({ value, label: value }))
+}
+
+function createFieldOptions(values: ProgramSelectionProps["stacks"]): DefaultOptionType[] {
+  return values.map(({ stack, title }) => ({ value: stack, label: title }))
 }
 
 const emptyOption: DefaultOptionType = {
   label: "--- Make a Selection ---",
 }
 
-export function ProgramSelection(props: Readonly<ProgramSelectionProps>) {
+export function ProgramSelection(props: Readonly<ProgramSelectionProps & { id: number }>) {
   return (
-    <div className="program-selection flex gap-4 items-center" id={props.listId}>
-      <Form.Item name={`location${props.listId}`} label="Location" initialValue={emptyOption.label}>
-        <Select
-          options={[emptyOption, ...createSelectOptions(props.locations ?? [])]}
-        />
-      </Form.Item>
-      <Form.Item name={`college${props.listId}`} label="College" initialValue={emptyOption.label}>
-        <Select
-          options={[emptyOption, ...createSelectOptions(props.colleges ?? [])]}
-        />
-      </Form.Item>
-      <Form.Item name={`program${props.listId}`} label="Program" initialValue={emptyOption.label}>
-        <Select
-          options={[emptyOption, ...createSelectOptions(props.programs ?? [])]}
-        />
-      </Form.Item>
-      <Form.Item name={`field${props.listId}`} label="Field" initialValue={emptyOption.label}>
-        <Select
-          options={[emptyOption, ...createSelectOptions(props.fieldsOfStudy ?? [])]}
-        />
-      </Form.Item>
-      <CircleX color="red" onClick={() => props.onRemove(props.listId)} style={{ cursor: "pointer" }} />
+    <div key={props.id} className="program-selection flex gap-4 items-center">
+      <Item name={[props.name, "location"]}>
+        <Select options={createSelectOptions(props.locations ?? [])} placeholder={emptyOption.label} allowClear={{ clearIcon: <CircleX color="red" size={15} /> }}/>
+      </Item>
+      <Item name={[props.name, "college"]}>
+        <Select options={createSelectOptions(props.colleges ?? [])} placeholder={emptyOption.label} allowClear={{ clearIcon: <CircleX color="red" size={15} /> }}/>
+      </Item>
+      <Item name={[props.name, "program"]}>
+        <Select options={createSelectOptions(props.programs ?? [])} placeholder={emptyOption.label} allowClear={{ clearIcon: <CircleX color="red" size={15} /> }}/>
+      </Item>
+      <Item name={[props.name, "field"]}>
+        <Select options={createFieldOptions(props.stacks)} placeholder={emptyOption.label} allowClear={{ clearIcon: <CircleX color="red" size={15} /> }}/>
+      </Item>
+      <CircleX color="red" onClick={props.onRemove} style={{ cursor: "pointer" }} />
     </div>
   )
 }
