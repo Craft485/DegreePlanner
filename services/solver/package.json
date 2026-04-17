@@ -1,0 +1,14 @@
+{
+  "name": "solver",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "radashi": "^12.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "5"
+  }
+}
