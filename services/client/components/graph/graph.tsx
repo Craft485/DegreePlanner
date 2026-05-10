@@ -89,11 +89,10 @@ export function GraphRenderer() {
   }, [fitView, graphData, setAllEdges, setNodes])
 
   const onNodeSelect = useCallback<NodeMouseHandler<Node>>(async (_ev, node) => {
-    const courses = graphData.semesters.flat()
-    const selectedCourse = courses.find(v => v.courseCode === node.id)!
+    const selectedCourse = courseMap.get(node.id)!
     const nodesToUpdate = await calculateCoursePath(selectedCourse, graphData)
     const coursesToUpdate = nodesToUpdate.map(node => node.courseCode)
-    setEdges(() => allEdges.filter(edge => coursesToUpdate.includes(edge.source)))
+    setEdges(() => allEdges.filter(edge => coursesToUpdate.includes(edge.source) && coursesToUpdate.includes(edge.target)))
     setNodes((prev) =>
       prev.map(node => {
         const course = courseMap.get(node.id)!
@@ -108,9 +107,7 @@ export function GraphRenderer() {
     )
   }, [allEdges, courseMap, graphData, setEdges, setNodes])
 
-  const edgeTypes = useMemo(() => ({
-    custom: CustomEdge,
-  }), [])
+  const edgeTypes = useMemo(() => ({ custom: CustomEdge }), [])
 
   return (
     <div style={{ height: window.innerHeight, width: window.innerWidth, position: "absolute", zIndex: 999, top: 0 }}>
