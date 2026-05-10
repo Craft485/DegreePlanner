@@ -33,3 +33,12 @@ export type Metrics = {
 export type VertexMap = {
   [code: string]: Vertex
 }
+
+export interface FormSubmissionData {
+  items: {
+    field: string;
+    college?: string;
+    location?: string;
+    program?: string;
+  }[]
+}

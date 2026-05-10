@@ -35,7 +35,7 @@ export async function Builder(curriculum: { [code: string]: Vertex }): Promise<V
     while (courses.length > 0) {
         const course = courses[0]
         const creditHours = CalculateCreditHours(semesters)
-        const prereqs = await GetPreReqs(allCourses, course)
+        const prereqs = semesters.flat().filter(possiblePreReq => course.preReqs.includes(possiblePreReq.courseCode))
         const minSemesterIndex = prereqs.length ? Math.max(...prereqs.map(c => c.semester)) : 0
         // Find any coreqs relating to the current course
         const coreqs = await FindCoreqs(courses, course)
