@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { ParseAnalytics as Parser } from "../../../solver/index.js"
+import type { FormSubmissionData } from "../../../../types/solver.js"
 console.log(Parser)
 const router = Router()
 
@@ -21,17 +22,8 @@ router.get("/programs", async (req, res) => {
   res.send(result)
 })
 
-interface FormSubmissionDate {
-  items: {
-    college?: string;
-    field: string;
-    location?: string;
-    program?: string;
-  }[]
-}
-
 router.post("/plan", async (req, res) => {
-  const data: FormSubmissionDate = req.body?.data
+  const data: FormSubmissionData = req.body?.data
   const stacks = data.items.map(item => item.field)
   console.log(stacks)
   const result = await Parser(stacks)

@@ -1,9 +1,10 @@
 import { Button, Card, Form } from "antd"
 import { ProgramSelection, ProgramSelectionProps } from "./programSelection"
 import { Plus } from "lucide-react"
-import { useCallback, useMemo } from "react"
+import { Dispatch, SetStateAction, useCallback, useMemo } from "react"
 import "./inputForm.css"
 import { usePrograms } from "@/hooks/programs"
+import type { Curriculum, FormSubmissionData } from "../../../../types/solver"
 
 const { List } = Form
 
@@ -15,7 +16,11 @@ function Title({ onAdd }: Readonly<{ onAdd: () => void }>) {
   )
 }
 
-export function InputForm() {
+interface InputFormProps {
+  setGraphData: Dispatch<SetStateAction<Curriculum | null>>;
+}
+
+export function InputForm({ setGraphData }: Readonly<InputFormProps>) {
   const [form] = Form.useForm()
   const { data } = usePrograms()
 
@@ -29,16 +34,18 @@ export function InputForm() {
     } satisfies Pick<ProgramSelectionProps, "colleges" | "fieldsOfStudy" | "locations" | "programs" | "stacks">
   ), [data])
 
-  const formFinish = useCallback(async (values) => {
-    console.log(values)
-    await fetch("http://127.0.0.1:3001/plan", {
+  const formFinish = useCallback(async (values: FormSubmissionData) => {
+    const response = await fetch("http://127.0.0.1:3001/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         data: values,
       }),
     })
-  }, [])
+    const result = await response.json()
+    console.log(result)
+    setGraphData(result)
+  }, [setGraphData])
 
   return (
     <Form

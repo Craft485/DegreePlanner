@@ -1,0 +1,12 @@
+/* CSS override to hide handles on ReactFlow nodes */
+.react-flow__handle {
+  opacity: 0;
+}
+
+.react-flow__handle-left {
+  left: 2px;
+}
+
+.react-flow__handle-right {
+  right: 2px;
+}
