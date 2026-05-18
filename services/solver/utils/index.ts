@@ -211,7 +211,7 @@ export function SortVertices(list: Vertex[]): Vertex[] {
 	const sortedCourseCodeList = SortStrings(courseCodeList)
 	const result: Vertex[] = []
 	for (const code of sortedCourseCodeList) { // There may be a more efficient way of doing this
-			result.push(list.find(v => v.courseCode === code)!)
+		result.push(list.find(v => v.courseCode === code)!)
 	}
 	return result
 }
