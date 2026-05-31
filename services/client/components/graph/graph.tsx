@@ -1,4 +1,4 @@
-import { useCallback, useContext, useLayoutEffect, useMemo } from 'react';
+import { CSSProperties, useCallback, useContext, useLayoutEffect, useMemo } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -20,11 +20,42 @@ import { GraphContext } from './graphProvider';
 export const NODE_WIDTH = 150
 export const NODE_HEIGHT = 50
 
+const BASE_NODE_STYLES = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+} satisfies CSSProperties
+
 function curriculumToFlowGraph(curriculum: Curriculum) {
   const nodes: Node[] = []
   const edges: Edge[] = []
   
-  for (const semester of curriculum.semesters) {
+  for (let semesterIndex = 0; semesterIndex < curriculum.semesters.length; semesterIndex++) {
+    const semester = curriculum.semesters[semesterIndex]
+    
+    // Setup semester header
+    const totalSemesterCredits = semester.reduce((total, curr) => total + curr.credits, 0)
+    nodes.push({
+      id: `semester-${semesterIndex}`,
+      data: {
+        label: `Semester ${semesterIndex + 1} (${totalSemesterCredits})`,
+      },
+      position: {
+        x: NODE_WIDTH * (1.5 * (semesterIndex + 1)),
+        y: 0,
+      },
+      style: {
+        ...BASE_NODE_STYLES,
+        borderStyle: "solid",
+        borderWidth: "thin",
+        borderColor: "white",
+        fontWeight: "bold",
+      },
+      selectable: false,
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
+    })
+
     for (let i = 0; i < semester.length; i++) {
       const course = semester[i]
       // Convert course data to ReactFlow graph node
@@ -35,14 +66,12 @@ function curriculumToFlowGraph(curriculum: Curriculum) {
         },
         position: {
           x: NODE_WIDTH * (1.5 * course.semester),
-          y: NODE_HEIGHT * (1.5 * i),
+          y: NODE_HEIGHT * (1.5 * (i + 1)),
         },
         width: NODE_WIDTH,
         height: NODE_HEIGHT,
         style: {
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          ...BASE_NODE_STYLES,
           borderColor: `#${course.color}`,
         },
         sourcePosition: Position.Right,
@@ -95,6 +124,7 @@ export function GraphRenderer() {
     setEdges(() => allEdges.filter(edge => coursesToUpdate.includes(edge.source) && coursesToUpdate.includes(edge.target)))
     setNodes((prev) =>
       prev.map(node => {
+        if (node.id.match(/^semester-/)) return node
         const course = courseMap.get(node.id)!
         return {
           ...node,
