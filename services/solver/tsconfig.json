@@ -8,6 +8,9 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
+    "types": [
+      "node"
+    ],
     "paths": {
       "types/*": ["../../types/*"]
     }
