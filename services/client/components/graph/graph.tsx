@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useContext, useLayoutEffect, useMemo } from 'react';
+import { CSSProperties, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
   useNodesState,
@@ -9,13 +9,22 @@ import {
   Position,
   NodeMouseHandler,
   MarkerType,
+  Background,
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
-import { Curriculum } from '$/solver';
+import { Curriculum, Vertex } from '$/solver';
 import { calculateCoursePath } from "../../../solver/utils/"
 import { CustomEdge } from './edge';
 import { GraphContext } from './graphProvider';
+import { twMerge } from "tailwind-merge";
+
+interface CourseNode extends Node {
+  data: {
+    label?: string;
+    course?: Vertex;
+  }
+}
 
 export const NODE_WIDTH = 150
 export const NODE_HEIGHT = 50
@@ -27,7 +36,7 @@ const BASE_NODE_STYLES = {
 } satisfies CSSProperties
 
 function curriculumToFlowGraph(curriculum: Curriculum) {
-  const nodes: Node[] = []
+  const nodes: CourseNode[] = []
   const edges: Edge[] = []
   
   for (let semesterIndex = 0; semesterIndex < curriculum.semesters.length; semesterIndex++) {
@@ -63,6 +72,7 @@ function curriculumToFlowGraph(curriculum: Curriculum) {
         id: course.courseCode,
         data: {
           label: course.courseCode,
+          course,
         },
         position: {
           x: NODE_WIDTH * (1.5 * course.semester),
@@ -105,11 +115,12 @@ function curriculumToFlowGraph(curriculum: Curriculum) {
 export function GraphRenderer() {
   const { graph: graphData, courseMap } = useContext(GraphContext)!
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<CourseNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [allEdges, setAllEdges] = useEdgesState<Edge>([])
+  const [nodeHover, setNodeHover] = useState(false);
+  const [hoveredNode, setHoveredNode] = useState<{x: number, y: number, data?: CourseNode}>({x: 0, y: 0})
   const { fitView } = useReactFlow();
-
 
   useLayoutEffect(() => {
     const { nodes, edges } = curriculumToFlowGraph(graphData)
@@ -138,24 +149,59 @@ export function GraphRenderer() {
   }, [allEdges, courseMap, graphData, setEdges, setNodes])
 
   const edgeTypes = useMemo(() => ({ custom: CustomEdge }), [])
+  const [maxXExtent, maxYExtent] = useMemo(
+    () => [
+      1.5 * graphData.semesters.length * NODE_WIDTH,
+      1.75 * Math.max(...graphData.semesters.map(s => s.length)) * NODE_HEIGHT,
+    ],
+    [graphData.semesters],
+  )
 
   return (
-    <div style={{ height: window.innerHeight, width: window.innerWidth, position: "absolute", zIndex: 999, top: 0 }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        colorMode="dark"
-        color="white"
-        nodesDraggable={false}
-        onNodeClick={onNodeSelect}
-        // translateExtent={[[0, 0], [5000, 5000]]}
-        onBeforeDelete={async () => false}
-        nodesConnectable={false}
-        fitView
-        edgeTypes={edgeTypes}
-      />
-    </div>
+    <>
+      <div
+        className={twMerge(
+          'absolute z-101 bg-[#424242] border-gray-400 border-solid border-2 justify-center items-center p-4 rounded-sm',
+          nodeHover ? "flex" : "hidden",
+        )}
+        style={{
+          translate: `${hoveredNode.x / (1)}px ${hoveredNode.y / (1)}px`,
+          minWidth: `${NODE_WIDTH}px`,
+          minHeight: `${NODE_HEIGHT}px`,
+          borderColor: `#${hoveredNode.data?.data.course?.color}`,
+        }}
+      >
+        {hoveredNode.data?.data.course?.courseName} ({hoveredNode.data?.data.course?.credits} Credits)
+      </div>
+      <div className='w-full h-full z-100 top-0 absolute'>
+        <ReactFlow
+          className="bg-transparent!"
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          colorMode="dark"
+          color="white"
+          nodesDraggable={false}
+          onNodeClick={onNodeSelect}
+          translateExtent={[[NODE_WIDTH, -NODE_HEIGHT], [maxXExtent, maxYExtent]]}
+          minZoom={1}
+          maxZoom={1}
+          onBeforeDelete={async () => false}
+          onNodeMouseEnter={(ev, node) => {
+            if (node.data.course?.courseCode) {
+              const rect = ev.currentTarget.getBoundingClientRect()
+              setHoveredNode({ x: rect.x, y: rect.top, data: node })
+              setNodeHover(true)
+            }
+          }}
+          onNodeMouseLeave={() => setNodeHover(false)}
+          nodesConnectable={false}
+          edgeTypes={edgeTypes}
+        >
+          <Background color="transparent" bgColor="transparent" />
+        </ReactFlow>
+      </div>
+    </>
   );
 }
