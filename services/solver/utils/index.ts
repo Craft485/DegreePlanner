@@ -50,7 +50,11 @@ export async function calculateCoursePath(course: Vertex, curriculum: Curriculum
 					? (curriculum.semesters as Vertex[][]).flat() 
 					: Object.values(curriculum as VertexMap), course.preReqs)
 			: []
-		)
+		),
+		// Account for coreqs
+		...ComputeVerticesFromCourseCodes(curriculum.totalCredits !== undefined
+			? (curriculum.semesters as Vertex[][]).flat()
+			: Object.values(curriculum as VertexMap), course.coReqs),
 	]
 
 	if (isLookingForward === undefined) path.push(course)
