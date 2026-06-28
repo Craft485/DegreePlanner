@@ -3,7 +3,7 @@
  */
 
 import { Curriculum } from 'types/solver.js'
-import { DeepCopy, ShiftBranch, GetPreReqs, UpdateMovedCourses } from '../utils/index.js'
+import { DeepCopy, ShiftBranch, UpdateMovedCourses, ComputeVerticesFromCourseCodes } from '../utils/index.js'
 import * as radashi from "radashi"
 
 const MAX_GENERATION_COUNT = 15, CHILDREN_PER_PARENT_PER_GENERATION = 10
@@ -78,9 +78,10 @@ async function Mutate(curriculum: Curriculum, alreadyAttemptedMoves: string[]): 
 			// console.log(`Potenial semester indicies: ${potentialSemesters.join(', ')}`)
 			for (let s = 0; s < potentialSemesterIndices.length; s++) {
 				const firstLayerPreReqs = courses.filter(v => courseToMove.preReqs.includes(v.courseCode))
+				const coreqsToMove = ComputeVerticesFromCourseCodes(tempCurriculum.semesters.flat(), courseToMove.coReqs)
 				courseToMove.semester = potentialSemesterIndices[s] + 1
-				for (const prereq of firstLayerPreReqs) {
-					ShiftBranch(prereq, courseToMove, tempCurriculum.semesters, false)
+				for (const course of [...firstLayerPreReqs, ...coreqsToMove]) {
+					ShiftBranch(course, courseToMove, tempCurriculum.semesters, false)
 				}
 				// @ts-ignore check back on this one
 				const creditHoursAfterShift = Object.values<number>(courses.reduce((acc, course) => { acc[course.semester] = ((acc[course.semester]) || 0) + course.credits; return acc }, {}))
