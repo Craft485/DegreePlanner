@@ -1,5 +1,5 @@
 import { Curriculum, Vertex } from 'types/solver.js'
-import { calculateCoursePath, ShiftBranch, DeepCopy, UpdateRelativeSemesterLocks, CalculateCreditHours, UpdateMovedCourses, ComputeVerticesFromCourseCodes } from '../utils/index.js'
+import { calculateCoursePath, ShiftBranch, DeepCopy, UpdateRelativeSemesterLocks, CalculateCreditHours, UpdateMovedCourses, ComputeVerticesFromCourseCodes, FindCoreqs } from '../utils/index.js'
 
 const { max:MAX, min:MIN } = Math
 
@@ -21,7 +21,7 @@ export async function OptimizeCurriculum(curriculum: Curriculum): Promise<Curric
 			if (foundPaths.includes(course.courseCode)) continue
 			// Prevent coreqs from being included multiple times
 			// TODO: This needs cleaned up a lot, perhaps the whole algo needs cleaned?
-			const coreqs = ComputeVerticesFromCourseCodes(optimizedSemesters.flat(), course.coReqs)
+			const coreqs = await FindCoreqs(optimizedSemesters.flat(), course)
 			if (coreqs.length > 0) {
 				let coreqAlreadyPresent = false
 				for (const coreq of coreqs) {

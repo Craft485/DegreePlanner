@@ -16,7 +16,7 @@ export async function ShiftBranch(currentVertex: Vertex, previousVertex: Vertex,
 
 	const currentSemester = currentVertex.semester
 	const previousSemester = previousVertex.semester
-	const dependencies: Vertex[] = ComputeVerticesFromCourseCodes(semesters.flat(), shiftingForward ? currentVertex.postReqs : currentVertex.preReqs)
+	const dependencies: Vertex[] = ComputeVerticesFromCourseCodes(semesters.flat(), [...currentVertex.coReqs, ...(shiftingForward ? currentVertex.postReqs : currentVertex.preReqs)])
 	// Move courses that are not in the correct semester
 	if (currentSemester <= previousSemester && shiftingForward) { // Forward
 		currentVertex.semester = previousSemester + 1

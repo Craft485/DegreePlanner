@@ -18,12 +18,13 @@ export async function Builder(curriculum: VertexMap): Promise<Vertex[][]> {
   // Add locked courses first, including any coreqs attached to them
   for (const lockedCourse of coursesWithLocks) {
     if (semesters.flat().find(v => v.courseCode === lockedCourse.courseCode) === undefined) {
-      const coreqs = ComputeVerticesFromCourseCodes([...courses, ...coursesWithLocks], lockedCourse.coReqs)
-      const group = [lockedCourse, ...coreqs]
+      const coreqs = await FindCoreqs(allCourses, lockedCourse)
+      const group = [lockedCourse, ...coreqs].map(DeepCopy)
+      const groupIds = group.map(v => v.courseCode)
       const groupSemesterIndex = Math.min(...lockedCourse.semesterLock!)
       group.forEach(c => c.semester = ((groupSemesterIndex < 0) ? (semesters.length + (groupSemesterIndex + 1)) : (groupSemesterIndex + 1)))
       semesters.at(groupSemesterIndex)?.push(...group)
-      for (const coreq of lockedCourse.coReqs) {
+      for (const coreq of groupIds) {
         const coreqIndex = courses.findIndex(c => c.courseCode === coreq)
         if (coreqIndex >= 0) {
           courses.splice(coreqIndex, 1)
@@ -38,7 +39,7 @@ export async function Builder(curriculum: VertexMap): Promise<Vertex[][]> {
       const prereqs = ComputeVerticesFromCourseCodes(courses, course.preReqs)
       const minSemesterIndex = prereqs.length ? Math.max(...prereqs.map(c => c.semester)) : 0
       // Find any coreqs relating to the current course
-      const coreqs = ComputeVerticesFromCourseCodes(courses, course.coReqs)
+      const coreqs = await FindCoreqs(courses, course)
       const currentCourseGroup = [course, ...coreqs].map(DeepCopy)
       const totalCreditSumForCurrentGroup = currentCourseGroup.reduce((total, currCourse) => total + currCourse.credits, 0)
       // Find the first semester that can accomodate the current course and its coreqs
