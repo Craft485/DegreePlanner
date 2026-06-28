@@ -33,6 +33,7 @@ const BASE_NODE_STYLES = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
+  backgroundColor: "black",
 } satisfies CSSProperties
 
 function curriculumToFlowGraph(curriculum: Curriculum) {
@@ -141,7 +142,7 @@ export function GraphRenderer() {
           ...node,
           style: {
             ...node.style,
-            background: coursesToUpdate.includes(course.courseCode) ? `hsl(from #${course.color} h min(50, 0.5 * s) min(50, calc(l - 15)))` : "unset",
+            background: coursesToUpdate.includes(course.courseCode) ? `hsl(from #${course.color} h min(50, 0.5 * s) min(50, calc(l - 15)))` : BASE_NODE_STYLES.backgroundColor,
           },
         }
       }),
@@ -161,7 +162,7 @@ export function GraphRenderer() {
     <>
       <div
         className={twMerge(
-          'absolute z-101 bg-[#424242] border-gray-400 border-solid border-2 justify-center items-center p-4 rounded-sm',
+          'absolute z-101 bg-black border-gray-400 border-solid border-2 justify-center items-center p-4 rounded-sm',
           nodeHover ? "flex" : "hidden",
         )}
         style={{
