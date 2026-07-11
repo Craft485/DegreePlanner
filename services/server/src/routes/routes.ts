@@ -1,7 +1,6 @@
 import { Router } from "express"
 import { ParseAnalytics as Parser } from "../../../solver/index.js"
 import type { FormSubmissionData } from "../../../../types/solver.js"
-console.log(Parser)
 const router = Router()
 
 router.get("/programs", async (req, res) => {
