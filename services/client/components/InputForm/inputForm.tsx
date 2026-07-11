@@ -18,9 +18,13 @@ function Title({ onAdd }: Readonly<{ onAdd: () => void }>) {
 
 interface InputFormProps {
   setGraphData: Dispatch<SetStateAction<Curriculum | null>>;
+  setSelectedFields: Dispatch<SetStateAction<string[]>>;
 }
 
-export function InputForm({ setGraphData }: Readonly<InputFormProps>) {
+export function InputForm({
+  setGraphData,
+  setSelectedFields,
+}: Readonly<InputFormProps>) {
   const [form] = Form.useForm()
   const { data } = usePrograms()
 
@@ -43,9 +47,9 @@ export function InputForm({ setGraphData }: Readonly<InputFormProps>) {
       }),
     })
     const result = await response.json()
-    console.log(result)
     setGraphData(result)
-  }, [setGraphData])
+    setSelectedFields(values.items.map(value => props.stacks.find(stack => stack.stack === value.field)?.title ?? ""))
+  }, [props.stacks, setGraphData, setSelectedFields])
 
   return (
     <Form
