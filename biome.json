@@ -29,6 +29,11 @@
       "react": "recommended"
     }
   },
+  "javascript": {
+    "formatter": {
+      "enabled": true
+    }
+  },
   "assist": {
     "actions": {
       "source": {
