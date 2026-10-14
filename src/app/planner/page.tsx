@@ -1,3 +1,5 @@
+import { PlannerInputForm } from "@/components/PlannerInputForm";
+
 export default function PlannerPage() {
-  return <>Hello World!</>;
+  return <PlannerInputForm />;
 }
