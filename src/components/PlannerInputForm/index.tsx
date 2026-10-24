@@ -11,21 +11,27 @@ export interface PlannerInputFormProps {
   setSelectedFields: Dispatch<SetStateAction<string[]>>;
 }
 
-interface PlannerSubmissionPayload {
-  item: {
+interface PlannerSubmissionFormData {
+  items: {
     "selected-program": string;
   }[];
+}
+
+interface PlannerSubmissionPayload {
+  stacks: string[];
 }
 
 const { List } = Form;
 
 export function PlannerInputForm() {
-  const onFinish = useCallback<(values: PlannerSubmissionPayload) => void>(
+  const onFinish = useCallback<(values: PlannerSubmissionFormData) => void>(
     (values) => {
-      console.log(values);
+      const payload = {
+        stacks: values.items.map((item) => item["selected-program"]),
+      } satisfies PlannerSubmissionPayload;
       fetch("/api/submit-planner-form", {
         method: "POST",
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
     },
     [],
