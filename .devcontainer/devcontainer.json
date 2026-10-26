@@ -1,0 +1,19 @@
+{
+  "name": "degree-planner-development",
+  "dockerComposeFile": "./docker-compose.yaml",
+  "service": "workspace",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "biomejs.biome",
+        "naumovs.color-highlight",
+        "eamodio.gitlens",
+        "bradlc.vscode-tailwindcss",
+        "wayou.vscode-todo-highlight"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}
