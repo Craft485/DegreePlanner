@@ -37,7 +37,7 @@ export function Semester({ label, courses }: Readonly<SemesterProps>) {
           credits={courses.reduce((t, c) => t + c.credits, 0)}
         />
       }
-      className="min-w-45 bg-[#1a2231]!"
+      className="min-w-45 bg-[#00364e]!"
     >
       <div className="flex flex-col gap-4">
         {...courses.map((course) => (
