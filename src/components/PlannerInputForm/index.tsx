@@ -3,8 +3,10 @@
 import { Button, Form } from "antd";
 import { PlusCircle } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePrograms } from "@/hooks/useProgramList";
+import type { DegreePlan } from "@/services/types";
+import { PlanView } from "../Curriculum/Plan";
 import { ProgramSelect } from "./ProgramSelect";
 
 export interface PlannerInputFormProps {
@@ -24,15 +26,20 @@ interface PlannerSubmissionPayload {
 const { List } = Form;
 
 export function PlannerInputForm() {
+  const [currentPlan, setCurrentPlan] = useState<DegreePlan | null>(null);
+
   const onFinish = useCallback<(values: PlannerSubmissionFormData) => void>(
-    (values) => {
+    async (values) => {
       const payload = {
         stacks: values.items.map((item) => item["selected-program"]),
       } satisfies PlannerSubmissionPayload;
-      fetch("/api/submit-planner-form", {
+      const res = await fetch("/api/submit-planner-form", {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      // TODO: Add zod parsing here
+      const result = await res.json();
+      setCurrentPlan(result);
     },
     [],
   );
@@ -47,7 +54,7 @@ export function PlannerInputForm() {
     [data],
   );
 
-  return (
+  return currentPlan === null ? (
     <Form onFinish={onFinish} initialValues={{ items: [{}] }}>
       <List name="items">
         {(fields, { add, remove }) => (
@@ -70,5 +77,7 @@ export function PlannerInputForm() {
       </List>
       <Button htmlType="submit">Submit</Button>
     </Form>
+  ) : (
+    <PlanView plan={currentPlan} setCurrentPlan={setCurrentPlan} />
   );
 }
