@@ -31,9 +31,9 @@ function aggressiveBuildOptimizer(
     const creditWeightForCurrentCourse =
       currCourse.credits + coReqs.reduce((total, c) => total + c.credits, 0);
 
-    const preReqs = getCoursePath(courseList, currCourse, [], true);
+    const preReqs = getCoursePath(courseList, currCourse, [], true, false);
     const setOfPreReqs = new Set(preReqs.map((c) => c.courseCode));
-    const postReqs = getCoursePath(courseList, currCourse, [], false);
+    const postReqs = getCoursePath(courseList, currCourse, [], false, false);
     const setOfPostReqs = new Set(postReqs.map((c) => c.courseCode));
     const minSemesterIndex =
       (new Set(preReqs.map((c) => c.semester)).size || 1) - 1;
@@ -50,7 +50,7 @@ function aggressiveBuildOptimizer(
         0,
       );
       // TODO: Max credits for a semester should be configurable by both the institution (default value) and the user (override value)
-      if (creditsForCurrentSemetser + creditWeightForCurrentCourse >= 18) {
+      if (creditsForCurrentSemetser + creditWeightForCurrentCourse > 18) {
         continue;
       }
 

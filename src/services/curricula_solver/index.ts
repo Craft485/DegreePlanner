@@ -40,5 +40,10 @@ export async function getPlanInformation(programStacks: string[]) {
   // TODO: Verify the full course list has all attributes present for using a given optimizer
   const initialPlan = addLocks(fullCourseList);
   const filledInPlan = optimizer?.[2]?.(initialPlan, fullCourseList);
+  if (filledInPlan) {
+    filledInPlan.totalCredits = filledInPlan?.semesters
+      .flat()
+      .reduce((total, course) => total + course.credits, 0);
+  }
   return filledInPlan;
 }

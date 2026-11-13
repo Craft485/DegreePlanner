@@ -8,6 +8,7 @@ export function getCoursePath(
   source: Course,
   currPath: Course[] = [],
   onlySelectPreceding: boolean | undefined = undefined,
+  includeCoReqs: boolean = true,
 ) {
   if (currPath.length === 0 && onlySelectPreceding === undefined) {
     currPath.push(source);
@@ -24,7 +25,7 @@ export function getCoursePath(
     const cIsPreReq =
       (onlySelectPreceding || onlySelectPreceding === undefined) &&
       source.preReqs.includes(c.courseCode);
-    const cIsCoReq = c.coReqs.includes(source.courseCode);
+    const cIsCoReq = includeCoReqs && c.coReqs.includes(source.courseCode);
 
     return cNotAlreadyPresentInPath && (cIsPostReq || cIsCoReq || cIsPreReq);
   });

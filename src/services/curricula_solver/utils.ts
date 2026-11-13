@@ -20,7 +20,7 @@ export function updateRelativeCourseLocks(program: DegreePlan): DegreePlan {
     for (let cI = semester.length - 1; cI >= 0; cI--) {
       const course = semester[cI];
       if (Array.isArray(course.semesterLock)) {
-        const currentRelativeIndex = sI - program.semesters.length - 1;
+        const currentRelativeIndex = sI - program.semesters.length;
         if (!course.semesterLock.includes(currentRelativeIndex)) {
           // biome-ignore lint/style/noNonNullAssertion: Assume the semester exists
           program.semesters.at(Math.min(...course.semesterLock))!.push(course);

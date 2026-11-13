@@ -30,6 +30,12 @@ export function mergeCurricula(curricula: DegreePlan[]) {
           ...preexistingCourse.postReqs,
           ...course.postReqs,
         ]);
+        // Combine locks
+        preexistingCourse.semesterLock = Array.isArray(
+          preexistingCourse.semesterLock,
+        )
+          ? [...preexistingCourse.semesterLock, ...(course.semesterLock ?? [])]
+          : course.semesterLock;
       }
     }
   }
