@@ -1,0 +1,24 @@
+name: degree-planner-development
+
+services:
+  workspace:
+    container_name: degree-planner-development
+
+    build:
+      context: ..
+      dockerfile: .devcontainer/dev.Dockerfile
+
+    ports:
+      - 3000:3000
+
+    environment:
+      WATCHPACK_POLLING: "true"
+
+    volumes:
+      - ../:/workspace:rw
+      - node_modules:/workspace/node_modules
+
+    tty: true
+
+volumes:
+  node_modules:
